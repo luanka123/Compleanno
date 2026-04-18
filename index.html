@@ -1,13 +1,198 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Andrea Livello 9 - Hub Compleanno</title>
+    
+    <!-- Librerie Esterne via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts: Minecraft Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Press+Start+2P', cursive; background-color: #001b3a; color: white; margin: 0; overflow: hidden; user-select: none; }
+        .pixel-border { border: 4px solid #3c2f23; box-shadow: inset 4px 4px 0 #7a6a4e, inset -4px -4px 0 #2b1f15, 6px 6px 0 rgba(0,0,0,0.5); }
+        .btn-gold { background-color: #fbbf24; color: #78350f; border-color: #b45309; }
+        .btn-green { background-color: #16a34a; color: white; border-color: #14532d; }
+        .hidden { display: none !important; }
+        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #1f2937; padding: 12px; border: 4px solid #000; }
+        .tile { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; font-size: 20px; background-image: url('https://picsum.photos/seed/dirt/100/100'); background-blend-mode: multiply; cursor: pointer; transition: transform 0.1s; }
+        @media (min-width: 768px) { .tile { width: 100px; height: 100px; font-size: 32px; } }
+        .celebration-bg { background-size: cover; background-position: center; position: absolute; inset: 0; filter: brightness(0.5) blur(2px); }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Elements -->
+    <audio id="audioCelebration" src="./canzone.mp3" loop></audio>
+    <audio id="audioGame" src="./gioco-bgm.mp3" loop></audio>
+    <audio id="audioClick" src="./click.mp3"></audio>
+    <audio id="audioSuccess" src="./successo.mp3"></audio>
+
+    <!-- 1. SPLASH SCREEN -->
+    <div id="viewSplash" class="relative z-10 flex h-screen flex-col items-center justify-center p-6 text-center">
+        <h1 class="mb-12 text-2xl md:text-5xl text-yellow-400 leading-relaxed animate-pulse" style="text-shadow: 0 4px 0 #b45309">
+            ANDREA<br>LIVELLO 9
+        </h1>
+        <div class="flex flex-col gap-8 w-full max-w-sm">
+            <button onclick="showCelebration()" class="pixel-border btn-gold py-6 text-sm md:text-lg active:translate-y-1">
+                🎉 BUON COMPLEANNO
+            </button>
+            <button onclick="showGame()" class="pixel-border btn-green py-6 text-sm md:text-lg active:translate-y-1">
+                🎮 SFIDA IL PUZZLE
+            </button>
+        </div>
+        <p class="mt-12 text-[8px] opacity-40">Seleziona una missione per iniziare</p>
+    </div>
+
+    <!-- 2. CELEBRATION SECTION -->
+    <div id="viewCelebration" class="hidden relative h-screen w-full flex flex-col items-center justify-center p-6">
+        <div class="celebration-bg" style="background-image: url('./andrea-basket.jpg')"></div>
+        <div class="relative z-20 text-center max-w-md w-full bg-black/70 p-8 border-4 border-white shadow-2xl">
+            <i data-lucide="trophy" class="mx-auto mb-6 text-yellow-400 w-16 h-16"></i>
+            <h2 class="mb-6 text-lg text-yellow-400">EQUIPAGGIAMENTO SBLOCCATO!</h2>
+            <div class="mb-6 border-2 border-white/20 overflow-hidden">
+                <img src="./sup-board.jpg" alt="Regalo SUP" class="w-full h-40 object-cover">
+            </div>
+            <p class="text-[10px] leading-loose text-white">
+                IL TUO NUOVO <span class="text-cyan-400">SUP</span> È PRONTO PER L'AVVENTURA IN MARE!
+            </p>
+        </div>
+        <button onclick="backToMenu()" class="relative z-20 mt-12 bg-black/60 border-2 border-white/30 px-6 py-3 text-[8px] hover:bg-black">
+            INDIETRO AL MENU
+        </button>
+    </div>
+
+    <!-- 3. GAME SECTION -->
+    <div id="viewGame" class="hidden relative h-screen w-full flex flex-col items-center justify-center p-6 bg-[#1a1a1a]">
+        <h2 class="mb-8 text-lg text-green-400">MINECRAFT PUZZLE</h2>
+        <div id="gameGrid" class="game-grid">
+            <!-- Tiles generated via JS -->
+        </div>
+        <div id="winOverlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-8 text-center">
+            <i data-lucide="trophy" class="mb-4 text-yellow-400 w-16 h-16 animate-bounce"></i>
+            <h3 class="text-xl text-yellow-400 mb-4">HAI VINTO!</h3>
+            <p class="text-[10px] text-white/70 mb-8">MAESTRO LIVELLO 9</p>
+            <button onclick="initGame()" class="pixel-border btn-green px-8 py-4 text-xs">RIGIOCA</button>
+        </div>
+        <button onclick="backToMenu()" class="mt-12 bg-black/60 border-2 border-white/30 px-6 py-3 text-[8px] hover:bg-black">
+            INDIETRO AL MENU
+        </button>
+    </div>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+        console.log("App caricata con successo - Modalità Standalone");
+
+        let puzzle = [];
+        let emptyPos = 8;
+        const celebrationAudio = document.getElementById('audioCelebration');
+        const gameAudio = document.getElementById('audioGame');
+        const clickAudio = document.getElementById('audioClick');
+        const successAudio = document.getElementById('audioSuccess');
+
+        // Audio Helper: Sblocca tutti i suoni al primo tocco
+        function initAudio() {
+            [celebrationAudio, gameAudio, clickAudio, successAudio].forEach(a => {
+                a.play().then(() => a.pause()).catch(() => {});
+            });
+            clickAudio.play();
+        }
+
+        function showCelebration() {
+            initAudio();
+            document.getElementById('viewSplash').classList.add('hidden');
+            document.getElementById('viewCelebration').classList.remove('hidden');
+            celebrationAudio.play();
+            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+        }
+
+        function showGame() {
+            initAudio();
+            document.getElementById('viewSplash').classList.add('hidden');
+            document.getElementById('viewGame').classList.remove('hidden');
+            gameAudio.play();
+            initGame();
+        }
+
+        function backToMenu() {
+            initAudio();
+            document.getElementById('viewSplash').classList.remove('hidden');
+            document.getElementById('viewCelebration').classList.add('hidden');
+            document.getElementById('viewGame').classList.add('hidden');
+            celebrationAudio.pause();
+            gameAudio.pause();
+            celebrationAudio.currentTime = 0;
+            gameAudio.currentTime = 0;
+        }
+
+        function initGame() {
+            document.getElementById('winOverlay').classList.add('hidden');
+            puzzle = [1, 2, 3, 4, 5, 6, 7, 8, null];
+            // Shuffle
+            for (let i = 0; i < 50; i++) {
+                let adj = getAdjacent(puzzle.indexOf(null));
+                let move = adj[Math.floor(Math.random() * adj.length)];
+                swap(puzzle.indexOf(null), move);
+            }
+            renderGame();
+        }
+
+        function getAdjacent(pos) {
+            let adj = [];
+            if (pos % 3 > 0) adj.push(pos - 1);
+            if (pos % 3 < 2) adj.push(pos + 1);
+            if (pos >= 3) adj.push(pos - 3);
+            if (pos <= 5) adj.push(pos + 3);
+            return adj;
+        }
+
+        function swap(i, j) {
+            let temp = puzzle[i];
+            puzzle[i] = puzzle[j];
+            puzzle[j] = temp;
+        }
+
+        function renderGame() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            puzzle.forEach((val, idx) => {
+                const tile = document.createElement('div');
+                tile.className = val ? 'tile pixel-border text-white' : 'tile bg-transparent';
+                if (val) {
+                    tile.innerText = val;
+                    tile.onclick = () => moveTile(idx);
+                }
+                grid.appendChild(tile);
+            });
+        }
+
+        function moveTile(idx) {
+            let emptyIdx = puzzle.indexOf(null);
+            let adj = getAdjacent(idx);
+            if (adj.includes(emptyIdx)) {
+                clickAudio.currentTime = 0;
+                clickAudio.play();
+                swap(idx, emptyIdx);
+                renderGame();
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            const win = puzzle.slice(0, 8).every((v, i) => v === i + 1);
+            if (win) {
+                successAudio.play();
+                document.getElementById('winOverlay').classList.remove('hidden');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+    </script>
+</body>
 </html>
 
