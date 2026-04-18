@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Informazioni sull'utente che festeggia.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "BirthdayStats": {
+      "title": "BirthdayStats",
+      "description": "Statistiche e progressioni del festeggiato.",
+      "type": "object",
+      "properties": {
+        "level": { "type": "number" },
+        "unlocks": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Dati profilo utente."
+    },
+    "/users/{userId}/stats/current": {
+      "schema": "BirthdayStats",
+      "description": "Statistiche di livello e sblocchi."
+    }
+  }
+}
